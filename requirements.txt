@@ -1,0 +1,4 @@
+apscheduler
+dotenv
+balena-sdk==7.1.0
+paho-mqtt
