@@ -153,6 +153,6 @@ def update_balena_device_tags():
 job = scheduler.add_job(read_and_publish_battery_data, 'interval', seconds=polling_interval)
 
 if balena is not None:
-    job_balena = scheduler.add_job(update_balena_device_tags, 'interval', minutes=1)
+    job_balena = scheduler.add_job(update_balena_device_tags, 'interval', minutes=10)
 
 scheduler.start()
