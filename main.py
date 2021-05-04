@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 import os
 from urllib.parse import urlparse
 import logging
+import shutil
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 if os.path.isfile('.env'):
@@ -35,7 +36,7 @@ else:
 # mqtt client
 # credentials
 log.info("create mqtt client...")
-credentials = os.environ['MQTT_CREDENTIALS']
+credentials = os.environ.get('MQTT_CREDENTIALS', ':')
 if os.path.isfile(credentials):
     with open(credentials, 'r') as fp:
         username, pw = fp.read().split(':')
@@ -44,7 +45,8 @@ else:
 
 # Create client
 client = mqtt.Client(client_id="{}/{}".format(device_name, service_name))
-client.username_pw_set(username, pw)
+if len(username) > 0:
+    client.username_pw_set(username, pw)
 client.enable_logger()
 client.reconnect_delay_set(min_delay=1, max_delay=120)
 
@@ -150,7 +152,15 @@ def update_balena_device_tags():
         update_tag(key, value)
 
 
+def publish_free_space():
+    free_bytes = shutil.disk_usage('/data').free
+
+    topic = "{}/disk/1/free".format(device_name)
+    client.publish(topic, free_bytes, qos=1, retain=True)
+
+
 job = scheduler.add_job(read_and_publish_battery_data, 'interval', seconds=polling_interval)
+job = scheduler.add_job(publish_free_space, 'interval', minutes=1)
 
 if balena is not None:
     job_balena = scheduler.add_job(update_balena_device_tags, 'interval', minutes=10)
