@@ -4,11 +4,10 @@ import os
 from urllib.parse import urlparse
 import logging
 import shutil
+import time
+import json
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-if os.path.isfile('.env'):
-    from dotenv import load_dotenv
-    load_dotenv()
 
 import sys
 sys.path.append('/usr/lib/python3.5/dist-packages')  # temporary hack to import the piJuice module
@@ -55,34 +54,38 @@ client.connect(mqtt_broker_address.hostname,
                mqtt_broker_address.port, 60)
 
 
+def publish(topic, value):
+    client.publish(topic, json.dumps({'time_ms': int(time.time()*1000.0), 'value': value}), qos=1, retain=True)
+
+
 def publish_battery_data(juice):
     topic = "{}/battery/charge".format(device_name)
-    client.publish(topic, juice['charge'], qos=1, retain=True)
+    publish(topic, juice['charge'])
 
     topic = "{}/battery/temperature".format(device_name)
-    client.publish(topic, juice['temperature'], qos=1, retain=True)
+    publish(topic, juice['temperature'])
 
     topic = "{}/battery/voltage".format(device_name)
-    client.publish(topic, juice['vbat'], qos=1, retain=True)
+    publish(topic, juice['vbat'])
 
     topic = "{}/battery/current".format(device_name)
-    client.publish(topic, juice['ibat'], qos=1, retain=True)
+    publish(topic, juice['ibat'])
 
     topic = "{}/power/input".format(device_name)
-    client.publish(topic, juice['power_input'], qos=1, retain=True)
+    publish(topic, juice['power_input'])
 
     topic = "{}/pijuice/io/voltage".format(device_name)
-    client.publish(topic, juice['vio'], qos=1, retain=True)
+    publish(topic, juice['vio'])
 
     topic = "{}/pijuice/io/current".format(device_name)
-    client.publish(topic, juice['iio'], qos=1, retain=True)
+    publish(topic, juice['iio'])
 
     topic = "{}/pijuice/power/input".format(device_name)
-    client.publish(topic, juice['power_input_board'], qos=1, retain=True)
+    publish(topic, juice['power_input_board'])
 
 
 # Get all parameters and return as a dictionary
-def get_battery_paremeters(pijuice):
+def get_battery_parameters(pijuice):
     juice = {}
 
     charge = pijuice.status.GetChargeLevel()
@@ -137,7 +140,7 @@ scheduler = BlockingScheduler()
 def read_and_publish_battery_data():
 
     # Read battery data
-    battery_data = get_battery_paremeters(pijuice)
+    battery_data = get_battery_parameters(pijuice)
     log.debug("battery data: {}".format(battery_data))
 
     # publish on mqtt
@@ -146,7 +149,7 @@ def read_and_publish_battery_data():
 
 def update_balena_device_tags():
     log.info("update balena device tags ...")
-    battery_data = get_battery_paremeters(pijuice)
+    battery_data = get_battery_parameters(pijuice)
     # Update tags
     for key, value in battery_data.items():
         update_tag(key, value)
@@ -156,7 +159,7 @@ def publish_free_space():
     free_bytes = shutil.disk_usage('/data').free
 
     topic = "{}/disk/1/free".format(device_name)
-    client.publish(topic, free_bytes, qos=1, retain=True)
+    publish(topic, free_bytes)
 
 
 job = scheduler.add_job(read_and_publish_battery_data, 'interval', seconds=polling_interval)
