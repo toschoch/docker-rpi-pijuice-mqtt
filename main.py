@@ -14,7 +14,7 @@ sys.path.append('/usr/lib/python3.5/dist-packages')  # temporary hack to import 
 
 from wrapper import pijuice
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
 service_name = "mqtt-pijuice"
