@@ -55,7 +55,7 @@ client.connect(mqtt_broker_address.hostname,
 
 
 def publish(topic, value):
-    client.publish(topic, json.dumps({'time_ms': int(time.time()*1000.0), 'value': value}), qos=1, retain=True)
+    client.publish(topic, json.dumps({'timeMilliseconds': int(time.time()*1000.0), 'value': value}), qos=1, retain=True)
 
 
 def publish_battery_data(juice):
