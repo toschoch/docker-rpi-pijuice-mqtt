@@ -15,6 +15,7 @@ sys.path.append('/usr/lib/python3.5/dist-packages')  # temporary hack to import 
 from wrapper import pijuice
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 log = logging.getLogger()
 
 service_name = "mqtt-pijuice"
