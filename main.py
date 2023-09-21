@@ -142,7 +142,7 @@ def read_and_publish_battery_data():
 
     # Read battery data
     battery_data = get_battery_parameters(pijuice)
-    log.debug("battery data: {}".format(battery_data))
+    log.debug("publish battery data: {}".format(battery_data))
 
     # publish on mqtt
     publish_battery_data(battery_data)
